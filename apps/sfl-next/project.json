@@ -1,0 +1,9 @@
+{
+  "name": "sfl",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/sfl-next",
+  "projectType": "application",
+  "tags": ["sfl"],
+  "// targets": "to see all targets run: nx show project sfl --web",
+  "targets": {}
+}
