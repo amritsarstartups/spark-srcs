@@ -1,0 +1,29 @@
+{
+  "name": "sml-ui",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/sml/ui/src",
+  "prefix": "lib",
+  "projectType": "library",
+  "tags": ["sml"],
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:ng-packagr-lite",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "options": {
+        "project": "libs/sml/ui/ng-package.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "libs/sml/ui/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "libs/sml/ui/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

@@ -1,3 +1,14 @@
 {
-  "recommendations": ["nrwl.angular-console", "esbenp.prettier-vscode"]
+  "recommendations": [
+    "nrwl.angular-console",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "johnpapa.angular2",
+    "angular.ng-template",
+    "formulahendry.auto-rename-tag",
+    "wmaurer.change-case",
+    "editorconfig.editorconfig",
+    "codezombiech.gitignore",
+    "bradlc.vscode-tailwindcss"
+  ]
 }
