@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
-import { 
-  getFirestore, collection, doc,  addDoc, updateDoc, getDoc, 
-  getDocs, query, where, orderBy, deleteDoc, 
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, getDoc,
+  getDocs, query, where, orderBy, deleteDoc,
   writeBatch, runTransaction, serverTimestamp, DocumentReference as FirestoreDocumentReference
 } from 'firebase/firestore';
 import { getStorage, ref } from 'firebase/storage';
@@ -53,13 +53,15 @@ export interface Transaction {
 
 // Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAtWj6DqYG0lOlz9zlbRFdk2QXwLCn9_Hs",
-  authDomain: "spark-ng-starter.firebaseapp.com",
-  projectId: "spark-ng-starter",
-  storageBucket: "spark-ng-starter.firebasestorage.app",
-  messagingSenderId: "663009121102",
-  appId: "1:663009121102:web:b4b96d58cf51fe2270041f"
-};
+    apiKey: "AIzaSyCuZpKNJdFFrGrvtY6yfOp8bh6CubdJSqc",
+    authDomain: "library-statusbrew.firebaseapp.com",
+    projectId: "library-statusbrew",
+    storageBucket: "library-statusbrew.firebasestorage.app",
+    messagingSenderId: "260373706060",
+    appId: "1:260373706060:web:39837c08946fdb477d4be9",
+    measurementId: "G-HS9J9QNX99"
+  };
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -80,7 +82,7 @@ export const firebaseBookOperations = {
       ...bookData,
       createdAt: serverTimestamp()
     };
-    
+
     const docRef = await addDoc(booksCollection, newBook);
     return {
       ...newBook,
@@ -88,23 +90,23 @@ export const firebaseBookOperations = {
       createdAt: new Date() // Convert serverTimestamp to Date for local use
     } as Book;
   },
-  
+
   getBook: async (bookId: string): Promise<Book | null> => {
     const bookDoc = await getDoc(doc(booksCollection, bookId));
     if (!bookDoc.exists()) return null;
-    
+
     const bookData = bookDoc.data();
-    return { 
-      ...bookData, 
+    return {
+      ...bookData,
       id: bookDoc.id,
       createdAt: bookData.createdAt?.toDate() || new Date()
     } as Book;
   },
-  
+
   updateBook: async (bookId: string, updates: Partial<Omit<Book, 'id' | 'createdAt'>>): Promise<void> => {
     await updateDoc(doc(booksCollection, bookId), updates);
   },
-  
+
   deleteBook: async (bookId: string): Promise<void> => {
     // First, check if there are any book copies
     const bookRef = doc(booksCollection, bookId);
@@ -113,20 +115,20 @@ export const firebaseBookOperations = {
       where('bookId', '==', bookRef)
     );
     const bookCopiesSnapshot = await getDocs(bookCopiesQuery);
-    
+
     if (!bookCopiesSnapshot.empty) {
       throw new Error('Cannot delete book with existing copies');
     }
-    
+
     await deleteDoc(bookRef);
   },
-  
+
   searchBooks: async (searchTerm: string): Promise<Book[]> => {
-    // Basic implementation - For production, consider using Firebase extensions 
+    // Basic implementation - For production, consider using Firebase extensions
     // like Algolia or ElasticSearch for advanced search capabilities
     const booksSnapshot = await getDocs(booksCollection);
     const books: Book[] = [];
-    
+
     booksSnapshot.forEach(doc => {
       const data = doc.data();
       const book = {
@@ -134,7 +136,7 @@ export const firebaseBookOperations = {
         id: doc.id,
         createdAt: data.createdAt?.toDate() || new Date()
       } as Book;
-      
+
       const searchTermLower = searchTerm.toLowerCase();
       if (
         book.title.toLowerCase().includes(searchTermLower) ||
@@ -145,20 +147,20 @@ export const firebaseBookOperations = {
         books.push(book);
       }
     });
-    
+
     return books;
   },
-  
+
   getBooksByGenre: async (genre: string): Promise<Book[]> => {
     // Note: Firebase doesn't support direct array contains queries on arrays
     // For production, consider using a different data structure or Cloud Functions
     const booksSnapshot = await getDocs(booksCollection);
     const books: Book[] = [];
-    
+
     booksSnapshot.forEach(doc => {
       const data = doc.data();
       const bookGenres = data.genre || [];
-      
+
       if (bookGenres.includes(genre)) {
         books.push({
           ...data,
@@ -167,7 +169,7 @@ export const firebaseBookOperations = {
         } as Book);
       }
     });
-    
+
     return books;
   }
 };
@@ -175,86 +177,86 @@ export const firebaseBookOperations = {
 // Updated Firebase BookCopy Operations
 export const firebaseBookCopyOperations = {
   createBookCopy: async (
-    bookId: string, 
+    bookId: string,
     locationId: string
   ): Promise<BookCopy> => {
     // Create reference objects
     const bookRef = doc(booksCollection, bookId);
     const locationRef = doc(locationsCollection, locationId);
-    
+
     // Create new book copy
     const newBookCopy: Omit<BookCopy, 'id'> = {
       bookId: bookRef,
       status: 'available',
       locationId: locationRef
     };
-    
+
     // Add to Firestore
     const docRef = await addDoc(bookCopiesCollection, newBookCopy);
-    
+
     return { ...newBookCopy, id: docRef.id };
   },
-  
+
   getBookCopy: async (copyId: string): Promise<BookCopy | null> => {
     const copyDoc = await getDoc(doc(bookCopiesCollection, copyId));
     if (!copyDoc.exists()) return null;
-    
+
     return { ...copyDoc.data(), id: copyDoc.id } as BookCopy;
   },
-  
+
   updateBookCopy: async (copyId: string, updates: Partial<Omit<BookCopy, 'id'>>): Promise<void> => {
     await updateDoc(doc(bookCopiesCollection, copyId), updates);
   },
-  
+
   deleteBookCopy: async (copyId: string): Promise<void> => {
     const copyRef = doc(bookCopiesCollection, copyId);
     const copyDoc = await getDoc(copyRef);
-    
+
     if (!copyDoc.exists()) {
       throw new Error('Book copy does not exist');
     }
-    
+
     // Check if the copy is borrowed
     if (copyDoc.data().status === 'borrowed') {
       throw new Error('Cannot delete a borrowed book copy');
     }
-    
+
     await deleteDoc(copyRef);
   },
-  
+
   getAvailableCopies: async (bookId?: string): Promise<BookCopy[]> => {
     const queryConstraints: any[] = [
       where('status', '==', 'available')
     ];
-    
+
     if (bookId) {
       const bookRef = doc(booksCollection, bookId);
       queryConstraints.push(where('bookId', '==', bookRef));
     }
-    
+
     const q = query(bookCopiesCollection, ...queryConstraints);
     const snapshot = await getDocs(q);
-    
+
     const copies: BookCopy[] = [];
     snapshot.forEach(doc => {
       copies.push({ ...doc.data(), id: doc.id } as BookCopy);
     });
-    
+
     return copies;
   },
-  
+
   getBookCopiesByStatus: async (status: BookCopy['status']): Promise<BookCopy[]> => {
     const q = query(
       bookCopiesCollection,
       where('status', '==', status)
     );
     const snapshot = await getDocs(q);
-    
+
     const copies: BookCopy[] = [];
     snapshot.forEach(doc => {
       copies.push({ ...doc.data(), id: doc.id } as BookCopy);
     });
-    
+
     return copies;
   }
 };
@@ -266,41 +268,41 @@ export const firebaseLocationOperations = {
       ...locationData,
       isActive: true
     };
-    
+
     const docRef = await addDoc(locationsCollection, newLocation);
     return { ...newLocation, id: docRef.id };
   },
-  
+
   getLocation: async (locationId: string): Promise<Location | null> => {
     const locationDoc = await getDoc(doc(locationsCollection, locationId));
     if (!locationDoc.exists()) return null;
-    
+
     return { ...locationDoc.data(), id: locationDoc.id } as Location;
   },
-  
+
   updateLocation: async (locationId: string, updates: Partial<Omit<Location, 'id'>>): Promise<void> => {
     await updateDoc(doc(locationsCollection, locationId), updates);
   },
-  
+
   setLocationStatus: async (locationId: string, isActive: boolean): Promise<void> => {
     await updateDoc(doc(locationsCollection, locationId), { isActive });
   },
-  
+
   getActiveLocations: async (): Promise<Location[]> => {
     const q = query(
       locationsCollection,
       where('isActive', '==', true)
     );
     const snapshot = await getDocs(q);
-    
+
     const locations: Location[] = [];
     snapshot.forEach(doc => {
       locations.push({ ...doc.data(), id: doc.id } as Location);
     });
-    
+
     return locations;
   },
-  
+
   getBookCopiesAtLocation: async (locationId: string): Promise<BookCopy[]> => {
     const locationRef = doc(locationsCollection, locationId);
     const q = query(
@@ -308,12 +310,12 @@ export const firebaseLocationOperations = {
       where('locationId', '==', locationRef)
     );
     const snapshot = await getDocs(q);
-    
+
     const copies: BookCopy[] = [];
     snapshot.forEach(doc => {
       copies.push({ ...doc.data(), id: doc.id } as BookCopy);
     });
-    
+
     return copies;
   }
 };
@@ -325,19 +327,19 @@ export const firebaseUserOperations = {
       ...userData,
       createdDate: serverTimestamp()
     };
-    
+
     const docRef = await addDoc(usersCollection, newUser);
-    return { 
-      ...newUser, 
+    return {
+      ...newUser,
       id: docRef.id,
       createdDate: new Date()
     };
   },
-  
+
   getUser: async (userId: string): Promise<User | null> => {
     const userDoc = await getDoc(doc(usersCollection, userId));
     if (!userDoc.exists()) return null;
-    
+
     const userData = userDoc.data();
     return {
       ...userData,
@@ -345,14 +347,14 @@ export const firebaseUserOperations = {
       createdDate: userData.createdDate?.toDate() || new Date()
     } as User;
   },
-  
+
   updateUser: async (
-    userId: string, 
+    userId: string,
     updates: Partial<Omit<User, 'id' | 'createdDate'>>
   ): Promise<void> => {
     await updateDoc(doc(usersCollection, userId), updates);
   },
-  
+
   setUserRole: async (userId: string, role: User['role']): Promise<void> => {
     await updateDoc(doc(usersCollection, userId), { role });
   }
@@ -373,44 +375,44 @@ export const firebaseTransactionOperations = {
       locationId,
       createdAt: new Date()
     };
-    
+
     const docRef = await addDoc(transactionsCollection, {
       ...newTransaction,
       createdAt: serverTimestamp()
     });
-    
+
     return { ...newTransaction, id: docRef.id };
   },
-  
+
   borrowBook: async (
     bookCopyId: string,
     userId: string,
     fromLocationId: string
   ): Promise<void> => {
     const bookCopyRef = doc(bookCopiesCollection, bookCopyId);
-    
+
     await runTransaction(db, async (transaction) => {
       const bookCopyDoc = await transaction.get(bookCopyRef);
-      
+
       if (!bookCopyDoc.exists()) {
         throw new Error('Book copy does not exist');
       }
-      
+
       const bookCopyData = bookCopyDoc.data();
-      
+
       if (bookCopyData.status !== 'available') {
         throw new Error('Book copy is not available for borrowing');
       }
-      
+
       // Get book ID from reference
       const bookId = (bookCopyData.bookId as FirestoreDocumentReference).id;
-      
+
       // Update book copy status
       transaction.update(bookCopyRef, {
         status: 'borrowed',
         locationId: null
       });
-      
+
       // Create transaction record
       const transactionData = {
         bookId,
@@ -419,12 +421,12 @@ export const firebaseTransactionOperations = {
         locationId: null,
         createdAt: serverTimestamp(),
       };
-      
+
       const transactionRef = doc(transactionsCollection);
       transaction.set(transactionRef, transactionData);
     });
   },
-  
+
   returnBook: async (
     bookCopyId: string,
     userId: string,
@@ -432,29 +434,29 @@ export const firebaseTransactionOperations = {
   ): Promise<void> => {
     const bookCopyRef = doc(bookCopiesCollection, bookCopyId);
     const locationRef = doc(locationsCollection, toLocationId);
-    
+
     await runTransaction(db, async (transaction) => {
       const bookCopyDoc = await transaction.get(bookCopyRef);
-      
+
       if (!bookCopyDoc.exists()) {
         throw new Error('Book copy does not exist');
       }
-      
+
       const bookCopyData = bookCopyDoc.data();
-      
+
       if (bookCopyData.status !== 'borrowed') {
         throw new Error('Book copy is not currently borrowed');
       }
-      
+
       // Get book ID from reference
       const bookId = (bookCopyData.bookId as FirestoreDocumentReference).id;
-      
+
       // Update book copy status
       transaction.update(bookCopyRef, {
         status: 'available',
         locationId: locationRef
       });
-      
+
       // Create transaction record
       const transactionData = {
         bookId,
@@ -463,12 +465,12 @@ export const firebaseTransactionOperations = {
         locationId: toLocationId,
         createdAt: serverTimestamp(),
       };
-      
+
       const transactionRef = doc(transactionsCollection);
       transaction.set(transactionRef, transactionData);
     });
   },
-  
+
   donateBook: async (
     bookId: string,
     userId: string,
@@ -477,28 +479,28 @@ export const firebaseTransactionOperations = {
     const bookRef = doc(booksCollection, bookId);
     const locationRef = doc(locationsCollection, toLocationId);
     let newBookCopyId: string;
-    
+
     // Run everything in a transaction
     await runTransaction(db, async (transaction) => {
       // Check if book exists
       const bookDoc = await transaction.get(bookRef);
-      
+
       if (!bookDoc.exists()) {
         throw new Error('Book does not exist');
       }
-      
+
       // Create new book copy
       const newBookCopyRef = doc(bookCopiesCollection);
       newBookCopyId = newBookCopyRef.id;
-      
+
       const bookCopyData = {
         bookId: bookRef,
         status: 'available' as BookCopy['status'],
         locationId: locationRef
       };
-      
+
       transaction.set(newBookCopyRef, bookCopyData);
-      
+
       // Create transaction record
       const transactionData = {
         bookId,
@@ -507,16 +509,16 @@ export const firebaseTransactionOperations = {
         locationId: toLocationId,
         createdAt: serverTimestamp(),
       };
-      
+
       const transactionRef = doc(transactionsCollection);
       transaction.set(transactionRef, transactionData);
     });
-    
+
     // Get the newly created book copy
     const bookCopyDoc = await getDoc(doc(bookCopiesCollection, newBookCopyId!));
     return { ...bookCopyDoc.data(), id: bookCopyDoc.id } as BookCopy;
   },
-  
+
   getUserTransactionHistory: async (userId: string): Promise<Transaction[]> => {
     const q = query(
       transactionsCollection,
@@ -524,7 +526,7 @@ export const firebaseTransactionOperations = {
       orderBy('createdAt', 'desc')
     );
     const snapshot = await getDocs(q);
-    
+
     const transactions: Transaction[] = [];
     snapshot.forEach(doc => {
       const data = doc.data();
@@ -534,10 +536,10 @@ export const firebaseTransactionOperations = {
         createdAt: data.createdAt?.toDate() || new Date()
       } as Transaction);
     });
-    
+
     return transactions;
   },
-  
+
   getBookTransactionHistory: async (bookId: string): Promise<Transaction[]> => {
     const q = query(
       transactionsCollection,
@@ -545,7 +547,7 @@ export const firebaseTransactionOperations = {
       orderBy('createdAt', 'desc')
     );
     const snapshot = await getDocs(q);
-    
+
     const transactions: Transaction[] = [];
     snapshot.forEach(doc => {
       const data = doc.data();
@@ -555,7 +557,7 @@ export const firebaseTransactionOperations = {
         createdAt: data.createdAt?.toDate() || new Date()
       } as Transaction);
     });
-    
+
     return transactions;
   }
 };
@@ -569,7 +571,7 @@ export const dateUtils = {
   formatDate: (date: Date): string => {
     return date.toLocaleDateString();
   },
-  
+
   calculateDaysBetween: (start: Date, end: Date = new Date()): number => {
     const diffTime = Math.abs(end.getTime() - start.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -580,10 +582,10 @@ export const dateUtils = {
 export const populateFirebaseWithDemoData = async (): Promise<void> => {
   try {
     console.log('Starting to populate Firebase with demo data...');
-    
+
     // Create batch for efficient writes
     const batch = writeBatch(db);
-    
+
     // Demo Locations
     const demoLocations: Omit<Location, 'id' | 'isActive'>[] = [
       {
@@ -599,7 +601,7 @@ export const populateFirebaseWithDemoData = async (): Promise<void> => {
         address: '789 Summit Avenue, Mountain View'
       }
     ];
-    
+
     // Create location documents and store their references
     const locationRefs: FirestoreDocumentReference[] = [];
     for (const locationData of demoLocations) {
@@ -607,7 +609,7 @@ export const populateFirebaseWithDemoData = async (): Promise<void> => {
       batch.set(locationRef, { ...locationData, isActive: true });
       locationRefs.push(locationRef);
     }
-    
+
     // Demo Books
     const demoBooks: Omit<Book, 'id' | 'createdAt'>[] = [
       {
@@ -651,18 +653,18 @@ export const populateFirebaseWithDemoData = async (): Promise<void> => {
         genre: ['Classic', 'Romance', 'Fiction']
       }
     ];
-    
+
     // Create book documents and store their references
     const bookRefs: FirestoreDocumentReference[] = [];
     for (const bookData of demoBooks) {
       const bookRef = doc(booksCollection);
-      batch.set(bookRef, { 
-        ...bookData, 
+      batch.set(bookRef, {
+        ...bookData,
         createdAt: serverTimestamp(),
       });
       bookRefs.push(bookRef);
     }
-    
+
     // Demo users (without auth)
     const demoUsers: Omit<User, 'id' | 'createdDate'>[] = [
       {
@@ -681,7 +683,7 @@ export const populateFirebaseWithDemoData = async (): Promise<void> => {
         role: 'reader'
       }
     ];
-    
+
     // Create user documents and store their references
     const userRefs: FirestoreDocumentReference[] = [];
     for (const userData of demoUsers) {
@@ -692,20 +694,20 @@ export const populateFirebaseWithDemoData = async (): Promise<void> => {
       });
       userRefs.push(userRef);
     }
-    
+
     // Commit batch write with locations, books, and users
     await batch.commit();
-    
+
     // Create book copies
     const bookCopiesBatch = writeBatch(db);
     let bookCopyCount = 0;
-    
+
     bookRefs.forEach((bookRef) => {
       // Each book gets copies at different locations
       locationRefs.forEach((locationRef) => {
         // Random number of copies (1-2) per location
         const numCopies = Math.floor(Math.random() * 2) + 1;
-        
+
         for (let i = 0; i < numCopies; i++) {
           const bookCopyRef = doc(bookCopiesCollection);
           bookCopiesBatch.set(bookCopyRef, {
@@ -713,15 +715,15 @@ export const populateFirebaseWithDemoData = async (): Promise<void> => {
             status: 'available',
             locationId: locationRef
           });
-          
+
           bookCopyCount++;
         }
       });
     });
-    
+
     // Commit book copies batch
     await bookCopiesBatch.commit();
-    
+
     console.log('Demo data population complete!');
     console.log(`Created ${demoLocations.length} locations`);
     console.log(`Created ${demoBooks.length} books`);
@@ -739,7 +741,7 @@ export const populateFirebaseWithDemoData = async (): Promise<void> => {
 export const clearAllFirebaseData = async (): Promise<void> => {
   try {
     console.log('Starting to clear all Firebase data...');
-    
+
     // Delete all documents in each collection
     const collections = [
       booksCollection,
@@ -748,39 +750,39 @@ export const clearAllFirebaseData = async (): Promise<void> => {
       usersCollection,
       transactionsCollection
     ];
-    
+
     for (const collection of collections) {
       const snapshot = await getDocs(collection);
-      
+
       if (snapshot.empty) {
         console.log(`Collection ${collection.id} is already empty.`);
         continue;
       }
-      
+
       console.log(`Deleting ${snapshot.size} documents from ${collection.id}...`);
-      
+
       // Use batched writes for efficiency (Firestore limits batch size to 500)
       const batchSize = 450;
       let batch = writeBatch(db);
       let counter = 0;
-      
+
       for (const doc of snapshot.docs) {
         batch.delete(doc.ref);
         counter++;
-        
+
         if (counter >= batchSize) {
           await batch.commit();
           batch = writeBatch(db);
           counter = 0;
         }
       }
-      
+
       // Commit any remaining documents
       if (counter > 0) {
         await batch.commit();
       }
     }
-    
+
     console.log('All Firebase data cleared successfully!');
     return;
   } catch (error) {
