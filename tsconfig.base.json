@@ -19,6 +19,8 @@
     "strict": true,
     "target": "es2022",
     "paths": {
+      "@sml/data": ["libs/sml/data/src/index.ts"],
+      "@sml/environments": ["libs/sml/environments/src/index.ts"],
       "@sml/ui": ["libs/sml/ui/src/index.ts"]
     }
   }

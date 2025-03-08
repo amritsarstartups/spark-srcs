@@ -1,0 +1,7 @@
+<ul>
+  @for (item of list$ | async; track $index) {
+  <li>
+    <pre>{{ item | json }}</pre>
+  </li>
+  }
+</ul>

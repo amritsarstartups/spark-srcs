@@ -1,0 +1,21 @@
+{
+  "name": "environments",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/sml/environments/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/sml/environments",
+        "main": "libs/sml/environments/src/index.ts",
+        "tsConfig": "libs/sml/environments/tsconfig.lib.json",
+        "assets": ["libs/sml/environments/*.md"],
+        "format": ["cjs"],
+        "generatePackageJson": true
+      }
+    }
+  }
+}

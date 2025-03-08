@@ -1,0 +1,2 @@
+src/lib/environment*
+!src/lib/environment-sample.ts
