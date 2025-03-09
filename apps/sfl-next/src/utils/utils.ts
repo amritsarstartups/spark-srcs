@@ -559,7 +559,24 @@ export const firebaseTransactionOperations = {
     });
 
     return transactions;
-  }
+  },
+  
+  getAllTransactions: async (): Promise<Transaction[]> => {
+    const q = query(transactionsCollection, orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+  
+    const transactions: Transaction[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      transactions.push({
+        ...data,
+        id: doc.id,
+        createdAt: data.createdAt?.toDate() || new Date(),
+      } as Transaction);
+    });
+  
+    return transactions;
+  },
 };
 
 // Helper Functions

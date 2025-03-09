@@ -1,10 +1,10 @@
 "use client"
 
-import AddBook from './components/bookcopies';
+import BookCopies from '../../_components/bookcopies';
 
 const BookCopiesPage = () => {
   return (
-    <AddBook />
+    <BookCopies />
   );
 };
 

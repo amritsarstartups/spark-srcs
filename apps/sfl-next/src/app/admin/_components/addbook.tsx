@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import { addDoc, collection } from 'firebase/firestore';
-import { db } from '../../../../../utils/utils'
+import { db } from '../../../utils/utils';
 
 const AddBook = () => {
   const [bookData, setBookData] = useState({

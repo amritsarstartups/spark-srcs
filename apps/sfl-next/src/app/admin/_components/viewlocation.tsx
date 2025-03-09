@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../../../../../utils/utils";
+import { db } from "../../../utils/utils";
 import { collection, getDocs } from "firebase/firestore";
 
 const ViewLocations = () => {

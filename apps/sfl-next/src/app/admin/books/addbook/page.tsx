@@ -1,6 +1,6 @@
 "use client"
 
-import AddBook from './components/addbook';
+import AddBook from '../../_components/addbook';
 
 const AddBookPage = () => {
   return (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { firebaseBookCopyOperations, db } from "../../../../../utils/utils";
+import { firebaseBookCopyOperations, db } from "../../../utils/utils";
 import {
   collection,
   CollectionReference,

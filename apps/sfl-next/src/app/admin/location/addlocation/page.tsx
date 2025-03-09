@@ -1,6 +1,6 @@
 "use client"
 
-import AddLocation from './components/addlocation';
+import AddLocation from '../../_components/addlocation';
 
 const AddLocationPage = () => {
   return (

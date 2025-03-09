@@ -1,6 +1,6 @@
 "use client"
 
-import ViewLocation from './components/viewlocation';
+import ViewLocation from '../../_components/viewlocation';
 
 const ViewLocationPage = () => {
   return (

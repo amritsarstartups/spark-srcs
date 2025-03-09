@@ -1,6 +1,6 @@
 "use client"
 
-import ShowBooks from './components/showbooks';
+import ShowBooks from '../../_components/showbooks';
 
 const ShowBookPage = () => {
   return (

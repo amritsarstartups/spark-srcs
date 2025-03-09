@@ -1,6 +1,6 @@
 "use client"
 
-import Transactions from './components/transaction';
+import Transactions from '../_components/transaction';
 
 const TransactionsPage = () => {
   return (
