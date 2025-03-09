@@ -29,7 +29,7 @@ const AddBook = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full p-6 bg-white rounded-lg shadow-md">
+    <div className="flex flex-col items-center justify-center w-full p-6 bg-white rounded-lg">
       <h2 className="text-3xl font-bold mb-6">Add New Book</h2>
       {message && <p className="mb-4 text-green-500">{message}</p>}
       <form className="w-full max-w-md" onSubmit={handleSubmit}>
