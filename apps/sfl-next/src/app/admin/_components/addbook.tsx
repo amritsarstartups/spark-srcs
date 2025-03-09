@@ -9,12 +9,24 @@ const AddBook = () => {
     isbn: '',
     coverImage: '',
     description: '',
-    genre: ''
+    genre: [] 
   });
   const [message, setMessage] = useState('');
 
   const handleChange = (e) => {
-    setBookData({ ...bookData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'genre') {
+      const options = e.target.options;
+      const selectedGenres = [];
+      for (let i = 0; i < options.length; i++) {
+        if (options[i].selected) {
+          selectedGenres.push(options[i].value);
+        }
+      }
+      setBookData({ ...bookData, genre: selectedGenres });
+    } else {
+      setBookData({ ...bookData, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -22,7 +34,7 @@ const AddBook = () => {
     try {
       await addDoc(collection(db, 'books'), bookData);
       setMessage('Book added successfully!');
-      setBookData({ title: '', author: '', isbn: '', coverImage: '', description: '', genre: '' });
+      setBookData({ title: '', author: '', isbn: '', coverImage: '', description: '', genre: [] });
     } catch (error) {
       setMessage('Error adding book: ' + (error as any).message);
     }
@@ -38,8 +50,7 @@ const AddBook = () => {
         <input name="isbn" type="text" placeholder="ISBN" value={bookData.isbn} onChange={handleChange} className="w-full p-4 border rounded mb-4" required />
         <input name="coverImage" type="text" placeholder="Cover Image URL" value={bookData.coverImage} onChange={handleChange} className="w-full p-4 border rounded mb-4" />
         <textarea name="description" placeholder="Description" value={bookData.description} onChange={handleChange} className="w-full p-4 border rounded mb-4" required></textarea>
-        <select name="genre" value={bookData.genre} onChange={handleChange} className="w-full p-4 border rounded mb-4" required>
-          <option value="">Select Genre</option>
+        <select name="genre" multiple value={bookData.genre} onChange={handleChange} className="w-full p-4 border rounded mb-4" required>
           <option value="Dystopian">Dystopian</option>
           <option value="Science Fiction">Science Fiction</option>
           <option value="Classic">Classic</option>

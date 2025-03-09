@@ -10,7 +10,7 @@ const AddLocation = () => {
     e.preventDefault();
     if (!name || !address) return;
     try {
-      await addDoc(collection(db, "locations"), { name, address });
+      await addDoc(collection(db, "locations"), { name, address,isActive: true });
       setName("");
       setAddress("");
       alert("Location added successfully!");
