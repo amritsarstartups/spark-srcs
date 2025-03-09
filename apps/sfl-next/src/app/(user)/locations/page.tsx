@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 function Locations() {
   const router = useRouter()
 
-  const [locations,setLocations]=useState([]);
+  const [locations, setLocations] = useState<Location[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -17,18 +17,25 @@ function Locations() {
     console.log(locations);
   })
 
+  interface Location {
+    id: string;
+    name: string;
+    address: string;
+  }
+
+
   return (
     <div className='mx-16 bg-gray-50 rounded-xl mt-8 py-6 px-4'>
         <span className='text-2xl font-bold'>Locations</span>
         <p className='text-gray-500'>Small Free Libraries are available at these locations</p>
-        {locations.map((location) => (
-            <div key={location.id} className='location-item bg-gray-100 p-6 rounded-lg my-2 flex items-center justify-between'>
+        {locations?.map((location:Location) => (
+            <div key={location?.id} className='location-item bg-white border border-gray-200 p-6 rounded-lg my-2 flex items-center justify-between'>
               <div>
                 <h3 className='font-bold'>{location.name}</h3>
                 <p>{location.address}</p>
               </div>
               <div>
-                <button className='bg-blue-500 text-white font-semibold px-6 py-2 rounded-md' onClick={()=>router.push("/locations/"+location.id)}>View Catalog</button>
+                <button className='bg-blue-500 text-white font-semibold px-6 py-2 rounded-md' onClick={()=>router.push("/user/locations/"+location.id)}>View Catalog</button>
               </div>
             </div>
         ))}

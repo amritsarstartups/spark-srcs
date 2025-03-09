@@ -386,8 +386,7 @@ export const firebaseTransactionOperations = {
 
   borrowBook: async (
     bookCopyId: string,
-    userId: string,
-    fromLocationId: string
+    userId: string
   ): Promise<void> => {
     const bookCopyRef = doc(bookCopiesCollection, bookCopyId);
 
