@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react'
-import { firebaseLocationOperations } from '../../utils/utils';
+import { firebaseLocationOperations } from '../../../utils/utils';
 import { useRouter } from 'next/navigation';
 
 function Locations() {
