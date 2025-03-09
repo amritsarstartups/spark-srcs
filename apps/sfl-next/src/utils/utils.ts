@@ -418,7 +418,7 @@ export const firebaseTransactionOperations = {
         bookId,
         userId,
         action: 'borrow' as Transaction['action'],
-        locationId: null,
+        locationId: fromLocationId,
         createdAt: serverTimestamp(),
       };
 

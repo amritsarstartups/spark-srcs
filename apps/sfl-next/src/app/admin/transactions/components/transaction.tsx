@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { firebaseTransactionOperations } from "../../../../utils/utils"; // Ensure correct import
 
-const Transactions = ({ userId }: { userId: string }) => {
+const Transactions = ({ userId = "reader1"}: { userId: string }) => {
     interface Transaction {
       id: string;
       bookId: string;
