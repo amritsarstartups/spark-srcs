@@ -7,13 +7,17 @@ import {
   firebaseBookOperations, 
   firebaseBookCopyOperations,
   Transaction,
-  Location
+  Location,
+  Book,
+  BookCopy
 } from '../../../utils/utils';
 import Link from 'next/link';
 
 interface ExtendedTransaction extends Transaction {
   bookTitle?: string;
   locationName?: string;
+  bookCopyId?: string; // Add this to store the book copy ID
+  canBeReturned?: boolean; // New flag to control return button visibility
 }
 
 export default function UserHistoryPage() {
@@ -26,106 +30,154 @@ export default function UserHistoryPage() {
   const [donateSuccess, setDonateSuccess] = useState<string | null>(null);
   
   // In a real app, this would come from authentication
-  const userId = 'reader1';
+  const userId = 'TpDZRqVaROl7cXoSqcEH';
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        // Fetch user's transaction history
-        const userTransactions = await firebaseTransactionOperations.getUserTransactionHistory(userId);
+  const refreshData = async () => {
+    try {
+      setLoading(true);
+      // Fetch user's transaction history
+      const userTransactions = await firebaseTransactionOperations.getUserTransactionHistory(userId);
+      
+      // Fetch active locations for return options
+      const activeLocations = await firebaseLocationOperations.getActiveLocations();
+      setLocations(activeLocations);
+      if (activeLocations.length > 0 && !activeLocation) {
+        setActiveLocation(activeLocations[0].id);
+      }
+      
+      // Fetch borrowed book copies to get the book copy IDs
+      const borrowedCopies = await firebaseBookCopyOperations.getBookCopiesByStatus('borrowed');
+      
+      // Track which book copies are already borrowed to prevent duplicate return buttons
+      const returnableCopyIds = new Set();
+      
+      // Get all recent return transactions to know which books have been returned
+      const allTransactions = await firebaseTransactionOperations.getAllTransactions();
+      const returnTransactions = new Set(
+        allTransactions
+          .filter(t => t.action === 'return')
+          .map(t => t.bookId)
+      );
+      
+      // Enhance transactions with book and location info
+      const enhancedTransactions = await Promise.all(userTransactions.map(async (transaction) => {
+        const enhancedTransaction = { ...transaction } as ExtendedTransaction;
         
-        // Fetch active locations for return options
-        const activeLocations = await firebaseLocationOperations.getActiveLocations();
-        setLocations(activeLocations);
-        if (activeLocations.length > 0) {
-          setActiveLocation(activeLocations[0].id);
-        }
-        
-        // Enhance transactions with book and location info
-        const enhancedTransactions = await Promise.all(userTransactions.map(async (transaction) => {
-          const enhancedTransaction = { ...transaction } as ExtendedTransaction;
-          
-          try {
-            // Get book details for each transaction
-            const book = await firebaseBookOperations.getBook(transaction.bookId);
-            if (book) {
-              enhancedTransaction.bookTitle = book.title;
-              
-            }
-            
-            // Get location name if there's a location ID
-            if (transaction.locationId) {
-              const location = await firebaseLocationOperations.getLocation(transaction.locationId as string);
-              if (location) {
-                enhancedTransaction.locationName = location.name;
-              }
-            }
-          } catch (err) {
-            console.error('Error enhancing transaction:', err);
+        try {
+          // Get book details for each transaction
+          const book = await firebaseBookOperations.getBook(transaction.bookId);
+          if (book) {
+            enhancedTransaction.bookTitle = book.title;
           }
           
-          return enhancedTransaction;
-        }));
-        
-        setTransactions(enhancedTransactions);
-      } catch (err) {
-        console.error('Error fetching user history:', err);
-        setError('Failed to load your transaction history');
-      } finally {
-        setLoading(false);
-      }
-    }
+          // Get location name if there's a location ID
+          if (transaction.locationId) {
+            const location = await firebaseLocationOperations.getLocation(transaction.locationId);
+            if (location) {
+              enhancedTransaction.locationName = location.name;
+            }
+          }
 
-    fetchData();
+          // For 'borrow' transactions, find the corresponding book copy ID
+          if (transaction.action === 'borrow') {
+            // Find the book copy that matches this transaction's book ID
+            const matchingCopy = borrowedCopies.find(copy => 
+              (copy.bookId as any).id === transaction.bookId
+            );
+            
+            if (matchingCopy) {
+              enhancedTransaction.bookCopyId = matchingCopy.id;
+              
+              // Only allow returning if this copy hasn't been added to returnable list yet
+              // This prevents multiple "borrow" transactions of the same book showing return buttons
+              if (!returnableCopyIds.has(matchingCopy.id)) {
+                enhancedTransaction.canBeReturned = true;
+                returnableCopyIds.add(matchingCopy.id);
+              } else {
+                enhancedTransaction.canBeReturned = false;
+              }
+            } else {
+              // If we can't find a matching copy in borrowed status, 
+              // it means the book has already been returned
+              enhancedTransaction.canBeReturned = false;
+            }
+          }
+        } catch (err) {
+          console.error('Error enhancing transaction:', err);
+        }
+        
+        return enhancedTransaction;
+      }));
+      
+      setTransactions(enhancedTransactions);
+    } catch (err) {
+      console.error('Error fetching user history:', err);
+      setError('Failed to load your transaction history');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshData();
   }, [userId]);
 
-  console.log('transactions:', transactions);
-  
-  const handleReturn = async (bookId: string) => {
+  const handleReturn = async (transaction: ExtendedTransaction) => {
     if (!activeLocation) {
       setError('Please select a return location');
       return;
     }
+    
+    if (!transaction.bookCopyId) {
+      setError('Could not find the book copy to return');
+      return;
+    }
 
     try {
-      await firebaseTransactionOperations.returnBook(bookId, userId, activeLocation);
-      setReturnSuccess(`Book returned successfully to ${locations.find(l => l.id === activeLocation)?.name}`);
+      console.log(`Returning book copy ID: ${transaction.bookCopyId} to location: ${activeLocation}`);
+      await firebaseTransactionOperations.returnBook(
+        transaction.bookCopyId,
+        userId, 
+        activeLocation
+      );
       
-      // Refresh the transaction history
-      const updatedTransactions = await firebaseTransactionOperations.getUserTransactionHistory(userId);
-      setTransactions(updatedTransactions);
+      setReturnSuccess(`Book "${transaction.bookTitle}" returned successfully to ${locations.find(l => l.id === activeLocation)?.name}`);
+      
+      // Mark this transaction as not returnable immediately in the UI
+      setTransactions(transactions.map(t => {
+        if (t.bookCopyId === transaction.bookCopyId) {
+          return { ...t, canBeReturned: false };
+        }
+        return t;
+      }));
+      
+      // Refresh the transaction history after a short delay
+      setTimeout(() => {
+        refreshData();
+      }, 1000);
     } catch (err) {
       console.error('Error returning book:', err);
-      setError('Failed to return book');
+      setError(`Failed to return book: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   };
-
-//   const handleDonate = async (bookId: string) => {
-//     if (!activeLocation) {
-//       setError('Please select a donation location');
-//       return;
-//     }
-
-//     try {
-//       await firebaseTransactionOperations.donateBook(bookId, userId, activeLocation);
-//       setDonateSuccess(`Book donated successfully to ${locations.find(l => l.id === activeLocation)?.name}`);
-      
-//       // Refresh the transaction history
-//       const updatedTransactions = await firebaseTransactionOperations.getUserTransactionHistory(userId);
-//       setTransactions(updatedTransactions);
-//     } catch (err) {
-//       console.error('Error donating book:', err);
-//       setError('Failed to donate book');
-//     }
-//   };
 
   if (loading) {
     return <div className="p-8 text-center">Loading your transaction history...</div>;
   }
 
   if (error) {
-    return <div className="p-8 text-center text-red-600">{error}</div>;
+    return (
+      <div className="p-8 max-w-4xl mx-auto">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+        <div className="mb-4">
+          <Link href="/reader" className="text-blue-600 hover:underline mb-4 inline-block">
+            &larr; Back to Books
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -151,7 +203,7 @@ export default function UserHistoryPage() {
       )}
 
       <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-2">Return or Donate a Book</h2>
+        <h2 className="text-lg font-semibold mb-2">Return Location</h2>
         <div className="flex items-center">
           <select
             value={activeLocation}
@@ -166,7 +218,7 @@ export default function UserHistoryPage() {
           </select>
         </div>
         <p className="text-sm text-gray-600 mt-1">
-          Select the location where you're returning or donating books
+          Select the location where you're returning books
         </p>
       </div>
 
@@ -183,7 +235,8 @@ export default function UserHistoryPage() {
                   <div>
                     <h3 className="font-medium">{transaction.bookTitle || 'Unknown Book'}</h3>
                     <p className="text-sm text-gray-600">
-                      {transaction.action === 'donate' ? 'Donated' : "Borrowd"} on{' '}
+                      {transaction.action === 'borrow' ? 'Borrowed' : 
+                       transaction.action === 'return' ? 'Returned' : 'Donated'} on{' '}
                       {transaction.createdAt.toLocaleDateString()}
                     </p>
                     {transaction.locationName && (
@@ -191,29 +244,35 @@ export default function UserHistoryPage() {
                         {transaction.action === 'borrow' ? 'From' : 'To'}: {transaction.locationName}
                       </p>
                     )}
+                    {transaction.bookCopyId && (
+                      <p className="text-xs text-gray-500">Copy ID: {transaction.bookCopyId}</p>
+                    )}
                   </div>
                   
                   <div className="flex space-x-2">
-                    {transaction.action === 'borrow' && (
+                    {transaction.action === 'borrow' && transaction.canBeReturned && (
                       <button
-                        onClick={() => handleReturn(transaction.bookId)}
+                        onClick={() => handleReturn(transaction)}
                         className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded text-sm"
                       >
                         Return
                       </button>
                     )}
-                    {/* <button
-                      onClick={() => handleDonate(transaction.bookId)}
-                      className="bg-green-600 hover:bg-green-700 text-white py-1 px-3 rounded text-sm"
-                    >
-                      Donate Copy
-                    </button> */}
                   </div>
                 </div>
               </div>
             ))}
           </div>
         )}
+      </div>
+      
+      <div className="mt-6 text-right">
+        <button 
+          onClick={refreshData}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded"
+        >
+          Refresh Activity
+        </button>
       </div>
     </div>
   );

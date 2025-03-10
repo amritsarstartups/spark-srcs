@@ -27,7 +27,7 @@ export default function BooksPage() {
                 <p className="text-gray-600">Manage your books, transactions, and locations efficiently.</p>
                 <div className="grid md:grid-cols-2 gap-8 mt-16">
                     <BookAction href="/admin/location/addlocation" bgColor="bg-blue-500" title="Add Location" description="Add new location" />
-                    <BookAction href="/admin/location/viewlocation" bgColor="bg-purple-500" title="Show Books" description="Manage all locations" />
+                    <BookAction href="/admin/location/viewlocation" bgColor="bg-purple-500" title="Show Locations" description="Manage all locations" />
                 </div>
             </div>
         </div>

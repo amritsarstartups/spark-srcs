@@ -21,7 +21,7 @@ export default function BookDetailPage({
   const [locations, setLocations] = useState<Record<string, Location>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userId, setUserId] = useState('reader1'); // In a real app, this would come from authentication
+  const [userId, setUserId] = useState('TpDZRqVaROl7cXoSqcEH'); // In a real app, this would come from authentication
   const [borrowSuccess, setBorrowSuccess] = useState<string | null>(null);
   const bookId = params.bookId;
 

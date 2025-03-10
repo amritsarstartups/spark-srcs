@@ -20,7 +20,7 @@ export default function DonatePage() {
   const [error, setError] = useState<string | null>(null);
   
   // In a real app, this would come from authentication
-  const userId = 'reader1';
+  const userId = 'TpDZRqVaROl7cXoSqcEH';
 
   useEffect(() => {
     async function fetchData() {
