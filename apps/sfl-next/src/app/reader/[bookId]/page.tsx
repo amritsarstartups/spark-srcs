@@ -11,10 +11,10 @@ import { Book } from '../../types/book';
 import { Location } from '../../../utils/utils';
 import Link from 'next/link';
 
-export default function BookDetailPage({
+export default async function BookDetailPage({
   params,
 }: {
-  params: { bookId: string };
+  params: Promise<{ bookId: string }>;
 }) {
   const [book, setBook] = useState<Book | null>(null);
   const [availableCopies, setAvailableCopies] = useState<any[]>([]);
@@ -23,7 +23,7 @@ export default function BookDetailPage({
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState('TpDZRqVaROl7cXoSqcEH'); // In a real app, this would come from authentication
   const [borrowSuccess, setBorrowSuccess] = useState<string | null>(null);
-  const bookId = params.bookId;
+  const { bookId } = await params;
 
   useEffect(() => {
     async function fetchData() {

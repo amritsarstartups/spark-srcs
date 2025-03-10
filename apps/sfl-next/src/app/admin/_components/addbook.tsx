@@ -9,14 +9,14 @@ const AddBook = () => {
     isbn: '',
     coverImage: '',
     description: '',
-    genre: [] 
+    genre: [] as string[]
   });
   const [message, setMessage] = useState('');
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'genre') {
-      const options = e.target.options;
+      const options = (e.target as HTMLSelectElement).options;
       const selectedGenres = [];
       for (let i = 0; i < options.length; i++) {
         if (options[i].selected) {
@@ -29,7 +29,7 @@ const AddBook = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       await addDoc(collection(db, 'books'), bookData);

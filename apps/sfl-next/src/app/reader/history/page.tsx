@@ -134,7 +134,7 @@ export default function UserHistoryPage() {
     }
 
     try {
-      console.log(`Returning book copy ID: ${transaction.bookCopyId} to location: ${activeLocation}`);
+      // console.log(`Returning book copy ID: ${transaction.bookCopyId} to location: ${activeLocation}`);
       await firebaseTransactionOperations.returnBook(
         transaction.bookCopyId,
         userId, 

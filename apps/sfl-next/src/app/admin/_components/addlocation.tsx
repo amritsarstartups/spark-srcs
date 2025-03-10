@@ -6,7 +6,7 @@ const AddLocation = () => {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !address) return;
     try {

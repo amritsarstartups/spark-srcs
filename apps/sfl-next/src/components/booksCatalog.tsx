@@ -55,7 +55,7 @@ function BooksCatalog({ location }: BooksCatalogProps) {
   }, [location]);
 
   useEffect(() => {
-    console.log(books);
+    // console.log(books);
   }, [books]);
 
   return (
